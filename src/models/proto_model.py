@@ -1,7 +1,7 @@
 import keras.backend as K
 from keras.layers import Dense, Input, Lambda
-from models.linear_layer import LinearLayer
 from models.proto_layer import ProtoLayer
+from models.predictor import Predictor
 from keras.models import Model
 from keras.losses import mse, categorical_crossentropy
 import numpy as np
@@ -9,9 +9,10 @@ from utils.plotting import plot_rows_of_images
 
 
 class ProtoModel:
-    def __init__(self, num_prototypes, latent_dim):
+    def __init__(self, num_prototypes, latent_dim, predictor_depth):
         self.num_prototypes = num_prototypes
         self.latent_dim = latent_dim
+        self.predictor_depth = predictor_depth
         self.classification_weight = 10
         self.reconstruction_weight = 1
         self.close_to_proto_weight = 1
@@ -53,7 +54,7 @@ class ProtoModel:
         min_proto_dist = Lambda(ProtoModel.get_min)(proto_distances)
         min_feature_dist = Lambda(ProtoModel.get_min)(feature_distances)
         # Predictor part.
-        prediction = LinearLayer(self.num_prototypes)(proto_distances)
+        prediction = Predictor(self.num_prototypes, self.predictor_depth).model(proto_distances)
 
         auto = Model([input_layer, label_layer], [recons, prediction], "Autoencoder")
         # Define various loss tensors.

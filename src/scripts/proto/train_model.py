@@ -6,8 +6,9 @@ from models.proto_model import ProtoModel
 NUM_PROTOS = 15
 LATENT_DIM = 10
 NUM_EPOCHS = 5
+PREDICTOR_DEPTH = 2
 
-auto = ProtoModel(NUM_PROTOS, LATENT_DIM)
+auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 
 # Get the MNIST data.
 x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
