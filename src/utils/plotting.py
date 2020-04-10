@@ -31,3 +31,13 @@ def plot_rows_of_images(images, savepath):
             plot_single_img(np.reshape(type_of_img[j], (1, -1)), ax=new_ax)
     plt.savefig(savepath)
     plt.close('all')
+
+
+def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis):
+    assert len(x_data) == len(y_data) == len(labels)
+    for run_idx in range(len(x_data)):
+        plt.errorbar(x_data[run_idx], y_data[run_idx], yerr=y_stdev[run_idx], label=labels[run_idx])
+    plt.legend([str(label) for label in labels])
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    plt.show()

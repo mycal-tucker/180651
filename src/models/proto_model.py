@@ -79,10 +79,9 @@ class ProtoModel:
         return auto, decoder
 
     def train(self, inputs, epochs, batch_size):
-        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size)
+        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=0)
 
-    def evaluate(self, x_test, y_test_one_hot, y_test):
-        # losses = self.auto.evaluate([x_test, y_test_one_hot])
+    def evaluate(self, x_test, y_test_one_hot, y_test, plot=True):
         # Manually evaluate prediction accuracy
         test_reconstructions, test_predictions = self.auto.predict([x_test, y_test_one_hot])
         num_evaluated = 0
@@ -92,7 +91,13 @@ class ProtoModel:
             num_evaluated += 1
             if digit_prediction == y_test[i]:
                 num_correct += 1
-        print("Label accuracy:", num_correct / num_evaluated)
+        accuracy = num_correct / num_evaluated
+        print("Label accuracy:", accuracy)
+        # Evaluate reconstruction error
+        reconstruction_error = np.mean(np.square(test_reconstructions - x_test))
+        print("Reconstruction error:", reconstruction_error)
+        if not plot:
+            return reconstruction_error, accuracy, None, None
 
         # Plot and save reconstructions
         NUM_EXAMPLES_TO_PLOT = 10
@@ -119,3 +124,13 @@ class ProtoModel:
             decoded_proto = self.decoder.predict(proto_enc)
             decoded_prototypes[proto_idx] = decoded_proto
         plot_rows_of_images([decoded_prototypes], savepath=img_save_location + 'prototypes')
+
+        return reconstruction_error, accuracy, None, None
+
+    def save_model(self, filepath):
+        self.auto.save_weights(filepath + 'auto.h5')
+        self.decoder.save_weights(filepath + 'decoder.h5')
+
+    def load_model(self, filepath):
+        self.auto.load_weights(filepath + 'auto.h5')
+        self.decoder.load_weights(filepath + 'decoder.h5')
