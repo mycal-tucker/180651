@@ -11,7 +11,8 @@ class Predictor:
         self.model = self.build_model()
         plot_model(self.model, to_file='../../../saved_models/predictor.png', show_shapes=True)
 
-    # Last layer is the single linear thing
+    # Last layer is the single linear thing.
+    # Right now, hidden layers are linear too, but could make Dense or whatever.
     def build_model(self):
         input_layer = Input(shape=(self.num_prototypes,))
         dense_counter = 0
@@ -19,11 +20,10 @@ class Predictor:
         prev_dim = self.num_prototypes
         while dense_counter < self.num_layers - 1:
             num_units = 128
-            temp_dense = Dense(num_units, activation='linear')(prev_tensor)
-            prev_tensor = temp_dense
+            prev_tensor = LinearLayer(prev_dim, num_units)(prev_tensor)
             prev_dim = num_units
             dense_counter += 1
         # Lastly, pass through linear layer
-        prediction = LinearLayer(prev_dim)(prev_tensor)
+        prediction = LinearLayer(prev_dim, 10)(prev_tensor)
         predictor_model = Model(input_layer, prediction)
         return predictor_model

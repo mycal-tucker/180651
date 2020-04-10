@@ -79,7 +79,7 @@ class ProtoModel:
         return auto, decoder
 
     def train(self, inputs, epochs, batch_size):
-        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=0)
+        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=1)
 
     def evaluate(self, x_test, y_test_one_hot, y_test, plot=True):
         # Manually evaluate prediction accuracy
