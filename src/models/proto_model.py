@@ -81,8 +81,8 @@ class ProtoModel:
         auto.compile(optimizer='adam', loss='')
         return auto
 
-    def get_predictor_svd(self):
-        predictor_approx = self.predictor.get_svd()
+    def get_predictor_svd(self, num_components=None):
+        predictor_approx = self.predictor.get_svd(num_components=num_components)
         # Create a 1-layer approximation and load in the weights.
         new_predictor = Predictor(self.num_prototypes, 1)
         new_predictor.model.set_weights([predictor_approx])
