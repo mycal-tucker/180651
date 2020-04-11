@@ -18,18 +18,18 @@ class ProtoModel:
         self.close_to_proto_weight = 1
         self.proto_close_to_weight = 1
 
-        self.auto, self.decoder = self.build_model()
+        self.input_layer = Input(shape=(784,))  # Actual MNIST input.
+        self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons = self.build_parts()
+
+        self.auto = self.build_model()
 
     # Helper function for putting in lambda layers
     @staticmethod
     def get_min(x):
         return K.min(x, axis=1)
 
-    def build_model(self):
+    def build_parts(self):
         # Define all the layers for the functional API
-        # Inputs for both the MNIST data but also labels
-        input_layer = Input(shape=(784,))  # Actual MNIST input.
-        label_layer = Input(shape=(10,))  # The y labels. Needed as input for custom loss.
         # Encoder part.
         enc_layer1 = Dense(128, activation='relu')
         enc_layer2 = Dense(128, activation='linear')
@@ -39,26 +39,37 @@ class ProtoModel:
         dec_layer1 = Dense(128, activation='relu')
         recons_layer = Dense(784, activation='sigmoid', name='Reconstruction')
         # Prototypes part
-        self.proto_layer = ProtoLayer(self.num_prototypes, self.latent_dim)
+        proto_layer = ProtoLayer(self.num_prototypes, self.latent_dim)
 
-        # Assemble into one big model and start passing along tensors.
-        enc1 = enc_layer1(input_layer)
+        # Build encoder into model
+        enc1 = enc_layer1(self.input_layer)
         enc2 = enc_layer2(enc1)
-        latent = enc_layer3(enc2)
-        dec2 = dec_layer2(latent)
+        enc_output = enc_layer3(enc2)
+        encoder = Model(self.input_layer, enc_output, name="Encoder")
+        # Build decoder into model
+        dec_input = Input(shape=(self.latent_dim,))
+        dec2 = dec_layer2(dec_input)
         dec1 = dec_layer1(dec2)
-        recons = recons_layer(dec1)
-        # Prototypes part
+        dec_recons = recons_layer(dec1)
+        decoder = Model(dec_input, dec_recons, name="Decoder")
+
+        # All the parts of the net are built separately.
+        latent = encoder(self.input_layer)
+        recons = decoder(latent)
+        predictor = Predictor(self.num_prototypes, self.predictor_depth)
+        return encoder, decoder, predictor, proto_layer, latent, recons
+
+    def build_model(self):
+        label_layer = Input(shape=(10,))  # The y labels. Needed as input for custom loss.
         # Distances from latents to prototypes and prototypes to latents.
-        proto_distances, feature_distances = self.proto_layer(latent)
+        proto_distances, feature_distances = self.proto_layer(self.latent)
         min_proto_dist = Lambda(ProtoModel.get_min)(proto_distances)
         min_feature_dist = Lambda(ProtoModel.get_min)(feature_distances)
-        # Predictor part.
-        prediction = Predictor(self.num_prototypes, self.predictor_depth).model(proto_distances)
+        prediction = self.predictor.model(proto_distances)
+        auto = Model([self.input_layer, label_layer], [self.recons, prediction], "Autoencoder")
 
-        auto = Model([input_layer, label_layer], [recons, prediction], "Autoencoder")
         # Define various loss tensors.
-        recons_loss = mse(input_layer, recons)
+        recons_loss = mse(self.input_layer, self.recons)
         pred_loss = categorical_crossentropy(label_layer, prediction)
         proto_dist_loss = K.mean(min_proto_dist)
         feature_dist_loss = K.mean(min_feature_dist)
@@ -68,15 +79,15 @@ class ProtoModel:
                        self.close_to_proto_weight * feature_dist_loss
         auto.add_loss(overall_loss)
         auto.compile(optimizer='adam', loss='')
+        return auto
 
-        # Also build the decoder
-        dec_input = Input(shape=(self.latent_dim,))
-        proto_dec2 = dec_layer2(dec_input)
-        proto_dec1 = dec_layer1(proto_dec2)
-        proto_recons = recons_layer(proto_dec1)
-        decoder = Model(dec_input, proto_recons, name="Decoder")
-
-        return auto, decoder
+    def get_predictor_svd(self):
+        predictor_approx = self.predictor.get_svd()
+        # Create a 1-layer approximation and load in the weights.
+        new_predictor = Predictor(self.num_prototypes, 1)
+        new_predictor.model.set_weights([predictor_approx])
+        self.predictor = new_predictor  # TODO: I do want to look into just creating a separate approximation net...
+        self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
 
     def train(self, inputs, epochs, batch_size):
         self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=1)
