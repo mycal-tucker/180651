@@ -5,34 +5,39 @@ from keras.models import Model
 from keras.utils import plot_model
 
 from models.linear_layer import LinearLayer
+from models.sparse_linear_layer import SparseLinearLayer
 
 
 class Predictor:
-    def __init__(self, num_prototypes, num_layers):
+    def __init__(self, num_prototypes, num_layers, sparse=False):
         self.num_prototypes = num_prototypes
         self.num_layers = num_layers
         self.num_classes = 10  # Predict which of 10 digits it is
+        self.sparse = sparse
         self.layers = []
         self.model = self.build_model()
         plot_model(self.model, to_file='../../../saved_models/predictor.png', show_shapes=True)
 
-    # Last layer is the single linear thing.
-    # Right now, hidden layers are linear too, but could make Dense or whatever.
     def build_model(self):
         input_layer = Input(shape=(self.num_prototypes,))
         dense_counter = 0
         prev_tensor = input_layer
         prev_dim = self.num_prototypes
+        # Only invert the first layer!
+        already_inverted = False
         while dense_counter < self.num_layers - 1:
-            num_units = 128
-            hidden_layer = LinearLayer(prev_dim, num_units, use_softmax=False)
-            # hidden_layer = Dense(num_units, use_bias=True, activation='linear')
+            num_units = 32
+            hidden_layer = LinearLayer(prev_dim, num_units, inverse_inputs=not already_inverted, use_softmax=False)
             self.layers.append(hidden_layer)
             prev_tensor = hidden_layer(prev_tensor)
             prev_dim = num_units
             dense_counter += 1
+            already_inverted = True
         # Lastly, pass through linear layer
-        last_layer = LinearLayer(prev_dim, self.num_classes)
+        if self.sparse:
+            last_layer = SparseLinearLayer(prev_dim, self.num_classes)
+        else:
+            last_layer = LinearLayer(prev_dim, self.num_classes, inverse_inputs=not already_inverted)
         self.layers.append(last_layer)
         prediction = last_layer(prev_tensor)
         predictor_model = Model(input_layer, prediction)
@@ -48,7 +53,6 @@ class Predictor:
         running_product = np.identity(self.num_prototypes)
         for layer in self.layers:
             layer_weights = layer.get_weights()
-            assert len(layer_weights) == 1, "Only support linear layers."  # TODO: look into how to support biases?
             running_product = np.matmul(running_product, layer_weights[0])
         return running_product
 
@@ -56,14 +60,14 @@ class Predictor:
         # Take the SVD to see if one can reduce the rank of the predictor matrix.
         u, s, vh = np.linalg.svd(matrix)
         # Plot the sigma values if you'd like
-        # plt.bar([i for i in range(len(s))], s)
-        # plt.show()
+        plt.bar([i for i in range(len(s))], s)
+        plt.show()
         ratios = [s[i] / s[i + 1] for i in range(len(s) - 1)]
-        # plt.bar([i for i in range(len(ratios))], ratios)
-        # plt.show()
+        plt.bar([i for i in range(len(ratios))], ratios)
+        plt.show()
 
         if num_components is not None:
-            assert num_components < self.num_classes, "Can't ask for more sigmas than classes to predict."
+            assert num_components <= self.num_classes, "Can't ask for more sigmas than classes to predict."
         else:
             num_components = None
             for i in range(len(s) - 1):
@@ -75,7 +79,11 @@ class Predictor:
                     break
             if num_components is None:
                 print("Didn't find good cutoff, using all svd components")
-                num_components = -1
+                num_components = len(s)
             print("Using cutoff idx", num_components)
         approximation = np.dot(u[:, :num_components] * s[:num_components], vh[:num_components, :])
+        # Create one prototype per class
+        # approximated_u = np.zeros((self.num_prototypes, self.num_classes))
+        # approximated_u[:self.num_classes, :] = u[:self.num_classes, :self.num_classes]
+        # approximation = np.dot(approximated_u * s[:], vh[:, :])
         return approximation

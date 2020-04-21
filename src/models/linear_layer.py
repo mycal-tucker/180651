@@ -4,9 +4,10 @@ from keras.layers import Layer
 
 
 class LinearLayer(Layer):
-    def __init__(self, input_dim, output_dim, use_softmax=True, **kwargs):
+    def __init__(self, input_dim, output_dim, inverse_inputs=False, use_softmax=True, **kwargs):
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.inverse_inputs = inverse_inputs
         self.use_softmax = use_softmax
         super(LinearLayer, self).__init__(**kwargs)
 
@@ -18,6 +19,8 @@ class LinearLayer(Layer):
         super(LinearLayer, self).build(input_shape)
 
     def call(self, x, **kwargs):
+        if self.inverse_inputs:
+            x = 1.0 / x
         product = K.dot(x, self.linear_weights)
         if not self.use_softmax:
             return product

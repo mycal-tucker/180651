@@ -12,14 +12,14 @@ from utils.metric_tracker_store import MetricTrackerStore
 import numpy as np
 from utils.plotting import plot_multiple_runs
 
-depths = [i for i in range(1, 5)]
-num_prototypes = [1, 2, 3, 4, 5, 6, 7,  8, 16]
-num_duplicate_trials = 10
+depths = [i for i in range(1, 4)]
+num_prototypes = [2, 3, 4, 5, 6, 7, 8, 16]
+num_duplicate_trials = 5
 
 LATENT_DIM = 10  # TODO: should vary this as well...
 NUM_EPOCHS = 10  # And this?
 
-DO_TRAIN_MODELS = False
+DO_TRAIN_MODELS = True
 if DO_TRAIN_MODELS:
     # Train the models.
     for depth in depths:

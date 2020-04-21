@@ -3,10 +3,10 @@ from models.proto_model import ProtoModel
 
 
 # Hyperparameters
-NUM_PROTOS = 5
+NUM_PROTOS = 10
 LATENT_DIM = 10
-NUM_EPOCHS = 10
-PREDICTOR_DEPTH = 2
+NUM_EPOCHS = 5
+PREDICTOR_DEPTH = 1
 
 auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 
