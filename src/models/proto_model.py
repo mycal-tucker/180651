@@ -103,8 +103,8 @@ class ProtoModel:
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
         new_protos.set_weights(current_weights)
 
-    def train(self, inputs, epochs, batch_size):
-        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=1)
+    def train(self, inputs, epochs, batch_size, verbosity=1):
+        self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=verbosity)
 
     def evaluate(self, x_test, y_test_one_hot, y_test, plot=True):
         # Manually evaluate prediction accuracy

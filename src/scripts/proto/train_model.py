@@ -3,7 +3,7 @@ from models.proto_model import ProtoModel
 
 
 # Hyperparameters
-NUM_PROTOS = 15
+NUM_PROTOS = 25
 LATENT_DIM = 10
 NUM_EPOCHS = 5
 PREDICTOR_DEPTH = 1
@@ -23,4 +23,8 @@ auto.evaluate(x_test, y_test_one_hot, y_test)
 # auto.get_predictor_svd()
 auto.use_fewer_protos()
 
+auto.evaluate(x_test, y_test_one_hot, y_test)
+
+# Fine-tuning
+auto.train([x_train, y_train_one_hot], epochs=1, batch_size=32)
 auto.evaluate(x_test, y_test_one_hot, y_test)

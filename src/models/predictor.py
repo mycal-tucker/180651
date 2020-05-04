@@ -89,19 +89,15 @@ class Predictor:
         # Take the SVD to see if one can reduce the rank of the predictor matrix.
         u, s, vh = np.linalg.svd(matrix)
         # Plot the sigma values if you'd like
-        plt.bar([i for i in range(len(s))], s)
-        plt.show()
-        ratios = [s[i] / s[i + 1] for i in range(len(s) - 1)]
-        plt.bar([i for i in range(len(ratios))], ratios)
-        plt.show()
+        # plt.bar([i for i in range(len(s))], s)
+        # plt.show()
+        # ratios = [s[i] / s[i + 1] for i in range(len(s) - 1)]
+        # plt.bar([i for i in range(len(ratios))], ratios)
+        # plt.show()
 
-        # Create one prototype per class
-        approximated_u = np.zeros((self.num_classes, self.num_classes))
-        # Identify the best prototypes
+        # Just try to directly take best rows of the matrix.
         best_prototypes = []
         for col_id in range(self.num_classes):
             best_prototypes.append(np.argmax(matrix[:, col_id]))
-        approximated_u[:, :] = u[best_prototypes, :self.num_classes]
-        approximation = np.dot(approximated_u * s[:], vh[:, :])
-        print("Only using prototypes", best_prototypes)
+        approximation = matrix[best_prototypes, :self.num_classes]
         return approximation, best_prototypes
