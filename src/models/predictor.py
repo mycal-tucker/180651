@@ -82,8 +82,26 @@ class Predictor:
                 num_components = len(s)
             print("Using cutoff idx", num_components)
         approximation = np.dot(u[:, :num_components] * s[:num_components], vh[:num_components, :])
-        # Create one prototype per class
-        # approximated_u = np.zeros((self.num_prototypes, self.num_classes))
-        # approximated_u[:self.num_classes, :] = u[:self.num_classes, :self.num_classes]
-        # approximation = np.dot(approximated_u * s[:], vh[:, :])
         return approximation
+
+    def decrease_num_prototypes(self):
+        matrix = self.get_single_matrix_predictor()
+        # Take the SVD to see if one can reduce the rank of the predictor matrix.
+        u, s, vh = np.linalg.svd(matrix)
+        # Plot the sigma values if you'd like
+        plt.bar([i for i in range(len(s))], s)
+        plt.show()
+        ratios = [s[i] / s[i + 1] for i in range(len(s) - 1)]
+        plt.bar([i for i in range(len(ratios))], ratios)
+        plt.show()
+
+        # Create one prototype per class
+        approximated_u = np.zeros((self.num_classes, self.num_classes))
+        # Identify the best prototypes
+        best_prototypes = []
+        for col_id in range(self.num_classes):
+            best_prototypes.append(np.argmax(matrix[:, col_id]))
+        approximated_u[:, :] = u[best_prototypes, :self.num_classes]
+        approximation = np.dot(approximated_u * s[:], vh[:, :])
+        print("Only using prototypes", best_prototypes)
+        return approximation, best_prototypes

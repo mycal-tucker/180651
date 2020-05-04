@@ -89,6 +89,20 @@ class ProtoModel:
         self.predictor = new_predictor  # TODO: I do want to look into just creating a separate approximation net...
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
 
+    def use_fewer_protos(self, new_num_protos=10):
+        predictor_approx, protos_to_keep = self.predictor.decrease_num_prototypes()
+        # Create a 1-layer approximation and load in the weights.
+        new_predictor = Predictor(new_num_protos, 1, sparse=False)  # Only 1 layer
+        new_predictor.model.set_weights([predictor_approx])
+        self.predictor = new_predictor
+        new_protos = ProtoLayer(new_num_protos, self.latent_dim)
+        current_weights = self.proto_layer.get_weights()
+        current_weights[0] = current_weights[0][protos_to_keep, :]
+        self.num_prototypes = new_num_protos
+        self.proto_layer = new_protos
+        self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
+        new_protos.set_weights(current_weights)
+
     def train(self, inputs, epochs, batch_size):
         self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=1)
 
