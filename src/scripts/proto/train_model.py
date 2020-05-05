@@ -6,7 +6,7 @@ from models.proto_model import ProtoModel
 NUM_PROTOS = 25
 LATENT_DIM = 10
 NUM_EPOCHS = 5
-PREDICTOR_DEPTH = 1
+PREDICTOR_DEPTH = 2
 
 auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 

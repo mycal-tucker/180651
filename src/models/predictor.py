@@ -69,20 +69,22 @@ class Predictor:
         if num_components is not None:
             assert num_components <= self.num_classes, "Can't ask for more sigmas than classes to predict."
         else:
-            num_components = None
-            for i in range(len(s) - 1):
-                curr_s = s[i]
-                next_s = s[i + 1]
-                ratio = next_s / curr_s
-                if ratio < 0.5:  # This is just totally made up. FIXME
-                    num_components = i + 1
-                    break
+            num_components = self.find_svd_dropoff(s, cutoff_ratio=0.5)
             if num_components is None:
                 print("Didn't find good cutoff, using all svd components")
                 num_components = len(s)
             print("Using cutoff idx", num_components)
         approximation = np.dot(u[:, :num_components] * s[:num_components], vh[:num_components, :])
         return approximation
+
+    def find_svd_dropoff(self, s, cutoff_ratio=0.5):
+        for i in range(len(s) - 1):
+            curr_s = s[i]
+            next_s = s[i + 1]
+            ratio = next_s / curr_s
+            if ratio < cutoff_ratio:
+                return i + 1
+        return len(s) + 1
 
     def decrease_num_prototypes(self):
         matrix = self.get_single_matrix_predictor()
@@ -95,9 +97,11 @@ class Predictor:
         # plt.bar([i for i in range(len(ratios))], ratios)
         # plt.show()
 
+        dropoff_svd = self.find_svd_dropoff(s)
+
         # Just try to directly take best rows of the matrix.
         best_prototypes = []
         for col_id in range(self.num_classes):
             best_prototypes.append(np.argmax(matrix[:, col_id]))
         approximation = matrix[best_prototypes, :self.num_classes]
-        return approximation, best_prototypes
+        return approximation, best_prototypes, dropoff_svd

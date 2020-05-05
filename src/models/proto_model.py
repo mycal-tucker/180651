@@ -90,7 +90,7 @@ class ProtoModel:
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
 
     def use_fewer_protos(self, new_num_protos=10):
-        predictor_approx, protos_to_keep = self.predictor.decrease_num_prototypes()
+        predictor_approx, protos_to_keep, dropoff_svd = self.predictor.decrease_num_prototypes()
         # Create a 1-layer approximation and load in the weights.
         new_predictor = Predictor(new_num_protos, 1, sparse=False)  # Only 1 layer
         new_predictor.model.set_weights([predictor_approx])
@@ -102,6 +102,7 @@ class ProtoModel:
         self.proto_layer = new_protos
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
         new_protos.set_weights(current_weights)
+        return protos_to_keep, dropoff_svd
 
     def train(self, inputs, epochs, batch_size, verbosity=1):
         self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=verbosity)
