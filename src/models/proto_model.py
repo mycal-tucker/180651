@@ -107,6 +107,16 @@ class ProtoModel:
     def train(self, inputs, epochs, batch_size, verbosity=1):
         self.auto.fit(inputs, epochs=epochs, batch_size=batch_size, verbose=verbosity)
 
+    def train_with_metrics(self, inputs, epochs, batch_size):
+        cutoffs = []
+        for epoch in range(epochs):
+            print("Training in epoch", epoch + 1, "of", epochs)
+            for batch_id in range(int(inputs[0].shape[0] / batch_size)):
+                small_input = [inputs[i][batch_id * batch_size: (batch_id + 1) * batch_size, :] for i in range(len(inputs))]
+                self.auto.train_on_batch(x=small_input, y=None)
+                cutoffs.append(self.predictor.find_svd_dropoff())
+        return cutoffs
+
     def evaluate(self, x_test, y_test_one_hot, y_test, plot=True):
         # Manually evaluate prediction accuracy
         test_reconstructions, test_predictions = self.auto.predict([x_test, y_test_one_hot])

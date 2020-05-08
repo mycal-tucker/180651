@@ -36,6 +36,8 @@ def plot_rows_of_images(images, savepath):
 
 def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis):
     assert len(x_data) == len(y_data) == len(labels)
+    if y_stdev is None:
+        y_stdev = [0 for _ in y_data]
     for run_idx in range(len(x_data)):
         plt.errorbar(x_data[run_idx], y_data[run_idx], yerr=y_stdev[run_idx], label=labels[run_idx])
     plt.legend([str(label) for label in labels])
