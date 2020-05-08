@@ -56,7 +56,7 @@ class ProtoModel:
         # All the parts of the net are built separately.
         latent = encoder(self.input_layer)
         recons = decoder(latent)
-        predictor = Predictor(self.num_prototypes, self.predictor_depth, sparse=False)
+        predictor = Predictor(self.num_prototypes, self.predictor_depth)
         return encoder, decoder, predictor, proto_layer, latent, recons
 
     def build_model(self):
@@ -84,7 +84,7 @@ class ProtoModel:
     def get_predictor_svd(self, num_components=None):
         predictor_approx = self.predictor.get_svd(num_components=num_components)
         # Create a 1-layer approximation and load in the weights.
-        new_predictor = Predictor(self.num_prototypes, 1, sparse=False)
+        new_predictor = Predictor(self.num_prototypes, 1)
         new_predictor.model.set_weights([predictor_approx])
         self.predictor = new_predictor  # TODO: I do want to look into just creating a separate approximation net...
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
@@ -92,7 +92,7 @@ class ProtoModel:
     def use_fewer_protos(self, new_num_protos=10):
         predictor_approx, protos_to_keep, dropoff_svd = self.predictor.decrease_num_prototypes()
         # Create a 1-layer approximation and load in the weights.
-        new_predictor = Predictor(new_num_protos, 1, sparse=False)  # Only 1 layer
+        new_predictor = Predictor(new_num_protos, 1)  # Only 1 layer
         new_predictor.model.set_weights([predictor_approx])
         self.predictor = new_predictor
         new_protos = ProtoLayer(new_num_protos, self.latent_dim)

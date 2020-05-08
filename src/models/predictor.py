@@ -5,15 +5,16 @@ from keras.models import Model
 from keras.utils import plot_model
 
 from models.linear_layer import LinearLayer
-from models.sparse_linear_layer import SparseLinearLayer
 
 
 class Predictor:
-    def __init__(self, num_prototypes, num_layers, sparse=False):
+    invert_dist = False
+    identity = False
+
+    def __init__(self, num_prototypes, num_layers):
         self.num_prototypes = num_prototypes
         self.num_layers = num_layers
         self.num_classes = 10  # Predict which of 10 digits it is
-        self.sparse = sparse
         self.layers = []
         self.model = self.build_model()
         plot_model(self.model, to_file='../../../saved_models/predictor.png', show_shapes=True)
@@ -24,7 +25,7 @@ class Predictor:
         prev_tensor = input_layer
         prev_dim = self.num_prototypes
         # Only invert the first layer!
-        already_inverted = False
+        already_inverted = not Predictor.invert_dist
         while dense_counter < self.num_layers - 1:
             num_units = 32
             hidden_layer = LinearLayer(prev_dim, num_units, inverse_inputs=not already_inverted, use_softmax=False)
@@ -34,10 +35,7 @@ class Predictor:
             dense_counter += 1
             already_inverted = True
         # Lastly, pass through linear layer
-        if self.sparse:
-            last_layer = SparseLinearLayer(prev_dim, self.num_classes)
-        else:
-            last_layer = LinearLayer(prev_dim, self.num_classes, inverse_inputs=not already_inverted)
+        last_layer = LinearLayer(prev_dim, self.num_classes, inverse_inputs=not already_inverted, identity=Predictor.identity)
         self.layers.append(last_layer)
         prediction = last_layer(prev_tensor)
         predictor_model = Model(input_layer, prediction)
@@ -86,7 +84,7 @@ class Predictor:
             ratio = next_s / curr_s
             if ratio < cutoff_ratio:
                 return i + 1
-        return len(s) + 1
+        return len(s)
 
     def decrease_num_prototypes(self):
         matrix = self.get_single_matrix_predictor()

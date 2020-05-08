@@ -1,6 +1,7 @@
 from data_parsing.mnist_data import get_data
 from models.proto_model import ProtoModel
 from utils.plotting import plot_multiple_runs
+from models.predictor import Predictor
 
 
 # Hyperparameters
@@ -8,6 +9,8 @@ NUM_PROTOS = 10
 LATENT_DIM = 10
 NUM_EPOCHS = 5
 PREDICTOR_DEPTH = 1
+Predictor.invert_dist = False
+Predictor.identity = False
 
 auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 
