@@ -1,5 +1,5 @@
 import keras.backend as K
-from keras.layers import Dense, Input, Lambda
+from keras.layers import Dense, Input, Lambda, Reshape, Flatten, Conv2D
 from models.proto_layer import ProtoLayer
 from models.predictor import Predictor
 from keras.models import Model
@@ -19,6 +19,8 @@ class ProtoModel:
         self.proto_close_to_weight = 1
 
         self.input_layer = Input(shape=(784,))  # Actual MNIST input.
+        # Toggle if you want convolutional components or not
+        # self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons = self.build_conv_parts()
         self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons = self.build_parts()
 
         self.auto = self.build_model()
@@ -45,6 +47,43 @@ class ProtoModel:
         enc1 = enc_layer1(self.input_layer)
         enc2 = enc_layer2(enc1)
         enc_output = enc_layer3(enc2)
+        encoder = Model(self.input_layer, enc_output, name="Encoder")
+        # Build decoder into model
+        dec_input = Input(shape=(self.latent_dim,))
+        dec2 = dec_layer2(dec_input)
+        dec1 = dec_layer1(dec2)
+        dec_recons = recons_layer(dec1)
+        decoder = Model(dec_input, dec_recons, name="Decoder")
+
+        # All the parts of the net are built separately.
+        latent = encoder(self.input_layer)
+        recons = decoder(latent)
+        predictor = Predictor(self.num_prototypes, self.predictor_depth)
+        return encoder, decoder, predictor, proto_layer, latent, recons
+
+    def build_conv_parts(self):
+        # Define all the layers for the functional API
+        # Encoder part.
+        enc_layer0 = Reshape((28, 28, 1))
+        enc_layer1 = Conv2D(32, (3, 3), activation='relu')
+        enc_layer2 = Conv2D(64, (3, 3), activation='relu')
+        enc_layer3 = Flatten()
+        enc_layer4 = Dense(128, activation='relu')
+        enc_layer5 = Dense(self.latent_dim, activation='linear')  # The latent encoding.
+        # Decoder part.
+        dec_layer2 = Dense(128, activation='linear')
+        dec_layer1 = Dense(128, activation='relu')
+        recons_layer = Dense(784, activation='sigmoid', name='Reconstruction')
+        # Prototypes part
+        proto_layer = ProtoLayer(self.num_prototypes, self.latent_dim)
+
+        # Build encoder into model
+        enc0 = enc_layer0(self.input_layer)
+        enc1 = enc_layer1(enc0)
+        enc2 = enc_layer2(enc1)
+        enc3 = enc_layer3(enc2)
+        enc4 = enc_layer4(enc3)
+        enc_output = enc_layer5(enc4)
         encoder = Model(self.input_layer, enc_output, name="Encoder")
         # Build decoder into model
         dec_input = Input(shape=(self.latent_dim,))

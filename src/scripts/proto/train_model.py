@@ -10,7 +10,7 @@ LATENT_DIM = 10
 NUM_EPOCHS = 5
 PREDICTOR_DEPTH = 1
 Predictor.invert_dist = False
-Predictor.identity = True
+Predictor.identity = False
 
 auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 
