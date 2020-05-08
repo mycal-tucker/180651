@@ -1,4 +1,4 @@
-from data_parsing.mnist_data import get_data
+from data_parsing.mnist_data import *
 from models.proto_model import ProtoModel
 from utils.plotting import plot_multiple_runs
 from models.predictor import Predictor
@@ -10,12 +10,13 @@ LATENT_DIM = 10
 NUM_EPOCHS = 5
 PREDICTOR_DEPTH = 1
 Predictor.invert_dist = False
-Predictor.identity = False
+Predictor.identity = True
 
 auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
 
 # Get the MNIST data.
-x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
+# x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_digit_data()
+x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_fashion_data()
 
 # Start training. Note how labels are passed in as an input.
 # auto.train([x_train, y_train_one_hot], epochs=NUM_EPOCHS, batch_size=32)

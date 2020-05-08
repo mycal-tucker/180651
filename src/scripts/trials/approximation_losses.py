@@ -2,7 +2,7 @@
 
 import keras.backend as K
 import tensorflow as tf
-from data_parsing.mnist_data import get_data
+from data_parsing.mnist_data import get_digit_data
 from models.proto_model import ProtoModel
 from utils.metric_tracker import MetricTracker
 from utils.metric_tracker_store import MetricTrackerStore
@@ -22,7 +22,7 @@ recons_metric_name = 'reconstruction error'
 approx_acc_metric_name = 'approximation accuracy'
 approx_acc_loss_metric_name = 'approximation accuracy loss'
 metric_store = MetricTrackerStore()
-x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
+x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_digit_data()
 for depth in depths:
     for num_protos in num_prototypes:
         for trial_idx in range(num_duplicate_trials):

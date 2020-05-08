@@ -1,4 +1,4 @@
-from data_parsing.mnist_data import get_data
+from data_parsing.mnist_data import get_digit_data
 from models.proto_model import ProtoModel
 import numpy as np
 import tensorflow as tf
@@ -19,7 +19,7 @@ recons_perf = []
 num_unique_protos = []
 svd_dropoffs = []
 for trial_idx in range(NUM_TRIALS):
-    x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
+    x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_digit_data()
     auto = ProtoModel(NUM_PROTOS, LATENT_DIM, PREDICTOR_DEPTH)
     auto.train([x_train, y_train_one_hot], epochs=NUM_EPOCHS, batch_size=32, verbosity=0)
     recons, acc, _, _ = auto.evaluate(x_test, y_test_one_hot, y_test, plot=False)

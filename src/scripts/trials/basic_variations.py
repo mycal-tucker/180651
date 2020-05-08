@@ -5,7 +5,7 @@
 
 import keras.backend as K
 import tensorflow as tf
-from data_parsing.mnist_data import get_data
+from data_parsing.mnist_data import get_digit_data
 from models.proto_model import ProtoModel
 from utils.metric_tracker import MetricTracker
 from utils.metric_tracker_store import MetricTrackerStore
@@ -29,7 +29,7 @@ if DO_TRAIN_MODELS:
                 # Create the model.
                 auto = ProtoModel(num_protos, LATENT_DIM, depth)
                 # Get the MNIST data. (Randomly shuffled per call)
-                x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
+                x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_digit_data()
                 auto.train([x_train, y_train_one_hot], epochs=NUM_EPOCHS, batch_size=32)
                 # Save the models for loading later.
                 auto.save_model('../../../saved_models/depth' + str(depth) + '_num_protos' + str(num_protos) + "_trial" + str(trial_idx))
@@ -41,7 +41,7 @@ if DO_TRAIN_MODELS:
 acc_metric_name = 'accuracy'
 recons_metric_name = 'reconstruction error'
 metric_store = MetricTrackerStore()
-x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_data()
+x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot = get_digit_data()
 for depth in depths:
     for num_protos in num_prototypes:
         for trial_idx in range(num_duplicate_trials):
