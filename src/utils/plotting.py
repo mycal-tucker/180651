@@ -22,7 +22,7 @@ def plot_single_img(img, ax=None, savepath=None):
         plt.show()
 
 
-def plot_rows_of_images(images, savepath):
+def plot_rows_of_images(images, savepath, show=True):
     num_types_of_imgs = len(images)
     fig = plt.figure(figsize=(images[0].shape[0], num_types_of_imgs))
     gs = gridspec.GridSpec(num_types_of_imgs, images[0].shape[0])
@@ -31,7 +31,8 @@ def plot_rows_of_images(images, savepath):
             new_ax = plt.subplot(gs[i, j])
             plot_single_img(np.reshape(type_of_img[j], (1, -1)), ax=new_ax)
     plt.savefig(savepath)
-    plt.show()
+    if show:
+        plt.show()
     plt.close('all')
 
 
@@ -44,6 +45,25 @@ def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis):
     plt.legend([str(label) for label in labels])
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
+    plt.show()
+
+
+def plot_bar_chart(x_data, y_data, y_stdev, labels, x_axis, y_axis):
+    assert len(x_data) == len(y_data) == len(labels)
+    if y_stdev is None:
+        y_stdev = [0 for _ in y_data]
+    fig, ax = plt.subplots()
+    width_increment = 1.0 / (len(x_data) + 1)
+    for run_idx in range(len(x_data)):
+        ax.bar(np.asarray(x_data[run_idx]) + width_increment * (run_idx - (len(x_data) - 1) / 2),
+               y_data[run_idx],
+               yerr=y_stdev[run_idx],
+               width=width_increment)
+    ax.legend([str(label) for label in labels])
+    ax.set_xticks(x_data[0])
+    ax.set_xticklabels(['Trained', 'Pruned', 'Tuned'])
+    ax.set_xlabel(x_axis)
+    ax.set_ylabel(y_axis)
     plt.show()
 
 

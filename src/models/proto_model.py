@@ -156,7 +156,7 @@ class ProtoModel:
                 cutoffs.append(self.predictor.find_svd_dropoff())
         return cutoffs
 
-    def evaluate(self, x_test, y_test_one_hot, y_test, plot=True):
+    def evaluate(self, x_test, y_test_one_hot, y_test, img_save_location='../../../saved_models/', plot=True, show=True):
         # Manually evaluate prediction accuracy
         test_reconstructions, test_predictions = self.auto.predict([x_test, y_test_one_hot])
         num_evaluated = 0
@@ -176,7 +176,6 @@ class ProtoModel:
 
         # Plot and save reconstructions
         NUM_EXAMPLES_TO_PLOT = 10
-        img_save_location = '../../../saved_models/'
         originals = np.zeros((NUM_EXAMPLES_TO_PLOT, 784))
         reconstructions = np.zeros((NUM_EXAMPLES_TO_PLOT, 784))
         predictions = []
@@ -188,7 +187,7 @@ class ProtoModel:
             reconstructions[test_idx] = reconstruction
             predicted_digit = np.argmax(prediction)
             predictions.append(predicted_digit)
-        plot_rows_of_images([originals, reconstructions], img_save_location + 'reconstructions')
+        plot_rows_of_images([originals, reconstructions], img_save_location + 'reconstructions', show=show)
 
         # Plot and save the prototypes
         proto_weights = self.proto_layer.get_weights()[0]
@@ -198,7 +197,7 @@ class ProtoModel:
             # Pass through decoder
             decoded_proto = self.decoder.predict(proto_enc)
             decoded_prototypes[proto_idx] = decoded_proto
-        plot_rows_of_images([decoded_prototypes], savepath=img_save_location + 'prototypes')
+        plot_rows_of_images([decoded_prototypes], savepath=img_save_location + 'prototypes', show=show)
 
         return reconstruction_error, accuracy, None, None
 

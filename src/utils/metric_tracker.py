@@ -1,8 +1,10 @@
 class MetricTracker:
-    def __init__(self, depth, num_prototypes, model_id):
+    def __init__(self, depth, num_prototypes, model_id, inverted=False, identity=False):
         self.depth = depth
         self.num_prototypes = num_prototypes
         self.model_id = model_id
+        self.inverted = inverted
+        self.identity = identity
         self.metric_map = {}
 
     def record_metrics(self, metric_name, metric_values):
