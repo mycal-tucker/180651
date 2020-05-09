@@ -27,7 +27,8 @@ def get_digit_data():
         y_train_one_hot[i][y] = 1
     for i, y in enumerate(y_test):
         y_test_one_hot[i][y] = 1
-    return x_train, y_train, y_train_one_hot, x_test, y_test, y_test_one_hot
+    class_names = [i for i in range(10)]
+    return x_train, y_train, y_train_one_hot, x_test, y_test, y_test_one_hot, class_names
 
 
 def get_fashion_data():
@@ -55,5 +56,5 @@ def get_fashion_data():
         y_train_one_hot[i][y] = 1
     for i, y in enumerate(y_test):
         y_test_one_hot[i][y] = 1
-    return x_train, y_train, y_train_one_hot, x_test, y_test, y_test_one_hot
+    return x_train, y_train, y_train_one_hot, x_test, y_test, y_test_one_hot, class_names
 

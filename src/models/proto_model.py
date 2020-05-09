@@ -5,7 +5,7 @@ from models.predictor import Predictor
 from keras.models import Model
 from keras.losses import mse, categorical_crossentropy
 import numpy as np
-from utils.plotting import plot_rows_of_images
+from utils.plotting import plot_rows_of_images, plot_latent_prompt
 
 
 class ProtoModel:
@@ -209,3 +209,13 @@ class ProtoModel:
     def load_model(self, filepath):
         self.auto.load_weights(filepath + 'auto.h5')
         self.decoder.load_weights(filepath + 'decoder.h5')
+
+    def viz_latent_space(self, x, y, class_labels):
+        # Generate encodings.
+        encodings = self.encoder.predict(x)
+        # Only take the first k
+        num_to_keep = 200
+        encodings = encodings[:num_to_keep, :]
+        # Get the prototype encodings out to plot as well.
+        protos = self.proto_layer.get_weights()[0]
+        plot_latent_prompt(encodings, labels=y[:num_to_keep], test_encodings=protos, classes=class_labels)
