@@ -59,16 +59,18 @@ for inv_dir in os.listdir(base_path):
         running_path = running_path[:-len(i_dir) - 1]
     running_path = running_path[:-len(inv_dir) - 1]
 
+plots_inverted = True
+plots_identity = False
 # Plot stuff from the store.
 # Compare svd cutoffs by depths.
 cutoff_means = []
 cutoff_stds = []
 batch_idxs = []
 for depth in range(1, 5):
-    cutoffs = store.get_matching_metric_values('svd', req_depth=depth, req_inverted=False, req_identity=False)
-    cutoff_means.append(np.mean(cutoffs, axis=0).tolist())
-    cutoff_stds.append(np.std(cutoffs, axis=0).tolist())
-    batch_idxs.append([i for i in range(len(cutoffs[0]))])
+    cutoffs = store.get_matching_metric_values('svd', req_depth=depth, req_inverted=plots_inverted, req_identity=plots_identity)
+    cutoff_means.append(np.mean(cutoffs, axis=0).tolist()[:9000])
+    cutoff_stds.append(np.std(cutoffs, axis=0).tolist()[:9000])
+    batch_idxs.append([i for i in range(len(cutoffs[0]))][:9000])
 plot_multiple_runs(batch_idxs, cutoff_means, y_stdev=cutoff_stds, labels=['Depth ' + str(i + 1) for i in range(len(cutoff_means))], x_axis="Batch idx", y_axis="Cutoff")
 
 # Compare accuracy by depths.
@@ -76,7 +78,7 @@ acc_means = []
 acc_stds = []
 acc_labels = []
 for depth in range(1, 5):
-    accs = store.get_matching_metric_values('acc', req_depth=depth, req_inverted=True, req_identity=False)
+    accs = store.get_matching_metric_values('acc', req_depth=depth, req_inverted=plots_inverted, req_identity=plots_identity)
     acc_means.append(np.mean(accs, axis=0).tolist())
     acc_stds.append(np.std(accs, axis=0).tolist())
     acc_labels.append([i for i in range(3)])
@@ -90,11 +92,11 @@ cutoff_means = []
 cutoff_stds = []
 batch_idxs = []
 for num_protos in num_prototypes:
-    cutoffs = store.get_matching_metric_values('svd', req_num_prototypes=num_protos, req_depth=1, req_inverted=False, req_identity=False)
-    cutoff_means.append(np.mean(cutoffs, axis=0).tolist())
-    cutoff_stds.append(np.std(cutoffs, axis=0).tolist())
-    batch_idxs.append([i for i in range(len(cutoffs[0]))])
-plot_multiple_runs(batch_idxs, cutoff_means, y_stdev=None, labels=['Num protos ' + str(num_prototypes[i]) for i in range(len(cutoff_means))], x_axis="Batch idx", y_axis="Cutoff")
+    cutoffs = store.get_matching_metric_values('svd', req_num_prototypes=num_protos, req_depth=1, req_inverted=plots_inverted, req_identity=plots_identity)
+    cutoff_means.append(np.mean(cutoffs, axis=0).tolist()[8000:])
+    cutoff_stds.append(np.std(cutoffs, axis=0).tolist()[8000:])
+    batch_idxs.append([i for i in range(len(cutoffs[0]))][8000:])
+plot_multiple_runs(batch_idxs, cutoff_means, y_stdev=cutoff_stds, labels=['Num protos ' + str(num_prototypes[i]) for i in range(len(cutoff_means))], x_axis="Batch idx", y_axis="Cutoff")
 
 # Show histograms of the different models at end of training by depth.
-# TODO
+# TODO: would require actually loading the models, I think, which means I'll do that in a different script.
