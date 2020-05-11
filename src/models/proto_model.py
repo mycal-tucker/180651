@@ -120,6 +120,9 @@ class ProtoModel:
         auto.compile(optimizer='adam', loss='')
         return auto
 
+    def get_sigma_values(self):
+        return self.predictor.get_sigmas()
+
     def get_predictor_svd(self, num_components=None):
         predictor_approx = self.predictor.get_svd(num_components=num_components)
         # Create a 1-layer approximation and load in the weights.

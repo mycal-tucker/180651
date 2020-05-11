@@ -46,6 +46,12 @@ class Predictor:
         approximation = self.compute_svd_approx(single_matrix_version, num_components)
         return approximation
 
+    def get_sigmas(self):
+        matrix = self.get_single_matrix_predictor()
+        u, s, vh = np.linalg.svd(matrix)
+        ratios = [s[i] / s[i + 1] for i in range(len(s) - 1)]
+        return s, ratios
+
     def get_single_matrix_predictor(self):
         # Take the product of all the linear layers to get a single matrix operation.
         running_product = np.identity(self.num_prototypes)

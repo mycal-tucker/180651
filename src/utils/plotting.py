@@ -36,31 +36,36 @@ def plot_rows_of_images(images, savepath, show=True):
     plt.close('all')
 
 
-def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis):
+def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis, window_size=500, top=11, bottom=0):
     assert len(x_data) == len(y_data) == len(labels)
     if y_stdev is None:
         y_stdev = [[0 for _ in y_data[i]] for i in range(len(y_data))]
     # Smooth stuff out
-    window_size = 500
+    plot_y = []
+    plot_y_err = []
+    plot_x = []
     for i in range(len(x_data)):
         for j in range(len(x_data[i]) - window_size):
             val = np.mean(y_data[i][j: j + window_size])
             y_data[i][j] = val
-        y_data[i] = y_data[i][:-window_size]
-        y_stdev[i] = y_stdev[i][:-window_size]
-        x_data[i] = x_data[i][:-window_size]
+        plot_y.append(y_data[i][:-window_size])
+        plot_y[-1].append(y_data[i][-window_size])
+        plot_y_err.append(y_stdev[i][:-window_size])
+        plot_y_err[-1].append(y_stdev[i][-window_size])
+        plot_x.append(x_data[i][:-window_size])
+        plot_x[-1].append(x_data[i][-window_size])
     fig, ax = plt.subplots()
     for run_idx in range(len(x_data)):
-        markers, caps, bars = ax.errorbar(x_data[run_idx], y_data[run_idx], yerr=y_stdev[run_idx], label=labels[run_idx])
-        [bar.set_alpha(0.01) for bar in bars]
+        markers, caps, bars = ax.errorbar(plot_x[run_idx], plot_y[run_idx], yerr=plot_y_err[run_idx], label=labels[run_idx])
+        [bar.set_alpha(0.4) for bar in bars]
     plt.legend([str(label) for label in labels])
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
-    plt.ylim(top=11, bottom=0)
+    plt.ylim(top=top, bottom=bottom)
     plt.show()
 
 
-def plot_bar_chart(x_data, y_data, y_stdev, labels, x_axis, y_axis):
+def plot_bar_chart(x_data, y_data, y_stdev, labels, x_axis, y_axis, top=1, bottom=0):
     assert len(x_data) == len(y_data) == len(labels)
     if y_stdev is None:
         y_stdev = [0 for _ in y_data]
@@ -73,10 +78,14 @@ def plot_bar_chart(x_data, y_data, y_stdev, labels, x_axis, y_axis):
                width=width_increment)
     ax.legend([str(label) for label in labels])
     ax.set_xticks(x_data[0])
-    ax.set_xticklabels(['Trained', 'Pruned', 'Tuned'])
+    if len(x_data[0]) == 3:
+        # Train, Prune, Tune case
+        ax.set_xticklabels(['Trained', 'Pruned', 'Tuned'])
+    elif len(x_data[0]) == 10:  # Sigma case
+        ax.set_xticklabels(['s' + str(i) for i in range(10)])
     ax.set_xlabel(x_axis)
     ax.set_ylabel(y_axis)
-    plt.ylim(top=1, bottom=0)
+    plt.ylim(top=top, bottom=bottom)
     plt.show()
 
 
