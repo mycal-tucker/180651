@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from keras.layers import Input
 from keras.models import Model

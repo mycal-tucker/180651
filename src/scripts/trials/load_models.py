@@ -8,25 +8,31 @@ from utils.metric_tracker_store import MetricTrackerStore
 from utils.metric_tracker import MetricTracker
 from utils.plotting import plot_multiple_runs, plot_bar_chart
 
-# base_path = '../../../saved_models'
-# x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_digit_data()
-base_path = '../../../saved_models/fashion'
-x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_fashion_data()
+# Choose which dataset you want to run with by toggling this boolean.
+digit_task = False
+if digit_task:
+    base_path = '../../../saved_models'
+    x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_digit_data()
+else:  # Fashion task.
+    base_path = '../../../saved_models/fashion'
+    x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_fashion_data()
 running_path = base_path
 NUM_DUPLICATES = 10
 LATENT_DIM = 10
 
-# Loading models takes time, so just ignore a bunch
+# Loading models takes time, so if you want to decrease load times, only pull in the types of models you want.
+# If you're not sure, you can leave values as None, and all will be loaded.
 req_inv = None
 req_identity = False
 req_num_protos = 10
-req_depth = 4
+req_depth = 1
 
 store = MetricTrackerStore()
 for inv_dir in os.listdir(base_path):
     if not os.path.isdir(base_path + '/' + inv_dir):
         continue
     if 'fashion' in inv_dir:
+        # The directory structure got a bit messed up, so this prevents digit tasks loading fashion models
         continue
     inverted = 'not' not in inv_dir
     if req_inv is not None and req_inv != inverted:
@@ -62,6 +68,7 @@ for inv_dir in os.listdir(base_path):
                     # Load the model so we can do stuff with it.
                     auto = ProtoModel(num_protos, LATENT_DIM, depth)
                     auto.load_model(running_path + '/' + str(model_id) + '_original_')  # I want the original one.
+                    # If you want to visualize the latent space, uncomment the line below. It pauses execution, though.
                     # auto.viz_latent_space(x_test, y_test, class_labels)
                     # Test it with data.
                     _, original_acc, _, _ = auto.evaluate(x_test, y_test_one_hot, y_test, plot=False)
@@ -70,7 +77,8 @@ for inv_dir in os.listdir(base_path):
                     sigmas, ratios = auto.get_sigma_values()
                     tracker.record_metrics('sigmas', sigmas.tolist())
                     tracker.record_metrics('ratios', [1.0] + ratios)
-                    # Replace it with the SVD approx.
+                    # Replace it with the SVD approximation. Incrementally decrease the number of components to get
+                    # a full range of results.
                     total_falloffs = [0]
                     incremental_falloffs = [0]
                     num_components = [10]
@@ -97,8 +105,7 @@ for inv_dir in os.listdir(base_path):
         running_path = running_path[:-len(i_dir) - 1]
     running_path = running_path[:-len(inv_dir) - 1]
 
-print("done")
-# Plot loss in performance by stepping through.
+# Plot loss in performance by stepping through how many SVD components you keep.
 comps = []
 total_loss = []
 total_loss_std = []
@@ -121,7 +128,7 @@ plot_multiple_runs(comps, total_loss, y_stdev=total_loss_std, labels=labels, x_a
 plot_multiple_runs(comps, rel_loss, y_stdev=rel_loss_std, labels=labels, x_axis="Num components",
                    y_axis="Incremental loss", window_size=1, top=None, bottom=None)
 
-# Plot histogram of sigma values and ratios
+# Plot histogram of sigma values and ratios.
 s_vals = []
 s_vals_std = []
 r_vals = []
@@ -133,5 +140,5 @@ for inv in [True, False]:
     r_vals.append(np.mean(store.get_matching_metric_values('ratios', req_inverted=inv, req_identity=False), axis=0).tolist())
     r_vals_std.append(np.std(store.get_matching_metric_values('ratios', req_inverted=inv, req_identity=False), axis=0).tolist())
     bar_labels.append([i for i in range(10)])
-plot_bar_chart(bar_labels, r_vals, y_stdev=r_vals_std, labels=["Inverted", "Not Inverted"], x_axis="Sigma index", y_axis="Trailing Ratio", top=None, bottom=None)
 plot_bar_chart(bar_labels, s_vals, y_stdev=s_vals_std, labels=["Inverted", "Not Inverted"], x_axis="Sigma index", y_axis="Sigma Value", top=None, bottom=None)
+plot_bar_chart(bar_labels, r_vals, y_stdev=r_vals_std, labels=["Inverted", "Not Inverted"], x_axis="Sigma index", y_axis="Trailing Ratio", top=None, bottom=None)

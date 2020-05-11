@@ -1,10 +1,11 @@
 import keras.backend as K
-from keras.layers import Dense, Input, Lambda, Reshape, Flatten, Conv2D
-from models.proto_layer import ProtoLayer
-from models.predictor import Predictor
-from keras.models import Model
-from keras.losses import mse, categorical_crossentropy
 import numpy as np
+from keras.layers import Dense, Input, Lambda, Reshape, Flatten, Conv2D
+from keras.losses import mse, categorical_crossentropy
+from keras.models import Model
+
+from models.predictor import Predictor
+from models.proto_layer import ProtoLayer
 from utils.plotting import plot_rows_of_images, plot_latent_prompt
 
 
@@ -19,8 +20,9 @@ class ProtoModel:
         self.proto_close_to_weight = 1
 
         self.input_layer = Input(shape=(784,))  # Actual MNIST input.
-        # Toggle if you want convolutional components or not
-        # self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons = self.build_conv_parts()
+        # Toggle if you want convolutional components or not,
+        # self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons =
+        # self.build_conv_parts()
         self.encoder, self.decoder, self.predictor, self.proto_layer, self.latent, self.recons = self.build_parts()
 
         self.auto = self.build_model()
@@ -128,7 +130,7 @@ class ProtoModel:
         # Create a 1-layer approximation and load in the weights.
         new_predictor = Predictor(self.num_prototypes, 1)
         new_predictor.model.set_weights([predictor_approx])
-        self.predictor = new_predictor  # TODO: I do want to look into just creating a separate approximation net...
+        self.predictor = new_predictor
         self.auto = self.build_model()  # Puts the predictor into this model. Could create new one if prefer...
 
     def use_fewer_protos(self, new_num_protos=10):
@@ -175,9 +177,10 @@ class ProtoModel:
         reconstruction_error = np.mean(np.square(test_reconstructions - x_test))
         print("Reconstruction error:", reconstruction_error)
         if not plot:
+            # One could return the other two losses, but I don't see the use right now
             return reconstruction_error, accuracy, None, None
 
-        # Plot and save reconstructions
+        # Plot and save reconstructions.
         NUM_EXAMPLES_TO_PLOT = 10
         originals = np.zeros((NUM_EXAMPLES_TO_PLOT, 784))
         reconstructions = np.zeros((NUM_EXAMPLES_TO_PLOT, 784))
@@ -192,7 +195,7 @@ class ProtoModel:
             predictions.append(predicted_digit)
         plot_rows_of_images([originals, reconstructions], img_save_location + 'reconstructions', show=show)
 
-        # Plot and save the prototypes
+        # Plot and save the prototypes.
         proto_weights = self.proto_layer.get_weights()[0]
         decoded_prototypes = np.zeros((self.num_prototypes, 784))
         for proto_idx in range(self.num_prototypes):
@@ -201,7 +204,7 @@ class ProtoModel:
             decoded_proto = self.decoder.predict(proto_enc)
             decoded_prototypes[proto_idx] = decoded_proto
         plot_rows_of_images([decoded_prototypes], savepath=img_save_location + 'prototypes', show=show)
-
+        # One could return the other two losses, but I don't see the use right now
         return reconstruction_error, accuracy, None, None
 
     def save_model(self, filepath):

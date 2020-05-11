@@ -5,12 +5,15 @@ import csv
 from utils.plotting import plot_multiple_runs, plot_bar_chart
 import numpy as np
 
-NUM_DUPLICATES = 5
+# Script reads in the csv files accompanying every trained model and plots some of the values. None of the saved models
+# themselves are actually loaded, because that takes a lot of time. If you need to do analysis on the saved models, see
+# the load_models.py script.
+
+NUM_DUPLICATES = 10
 
 base_path = '../../../saved_models'
 running_path = base_path
-store = MetricTrackerStore()
-total_files_read = 0
+store = MetricTrackerStore()  # The idea is to load metrics into this store and then plot them later.
 for inv_dir in os.listdir(base_path):
     if not os.path.isdir(base_path + '/' + inv_dir):
         continue
@@ -35,9 +38,6 @@ for inv_dir in os.listdir(base_path):
                     print("Depth", depth)
                     print("Num protos", num_protos)
                     print("Trial id", model_id)
-
-                    # if total_files_read > 250:
-                    #     break
                     # Load in the csv
                     with open(running_path + '/' + str(model_id) + '_metrics.csv', 'r') as metrics_file:
                         reader = csv.reader(metrics_file)
@@ -53,7 +53,6 @@ for inv_dir in os.listdir(base_path):
                                 classification_accs = [float(entry) for entry in line]
                                 tracker.record_metrics('acc', classification_accs)
                     store.add_tracker(tracker)
-                    total_files_read += 1
                 running_path = running_path[:-len(num_protos_dir) - 1]
             running_path = running_path[:-len(depth_dir) - 1]
         running_path = running_path[:-len(i_dir) - 1]
@@ -87,7 +86,7 @@ plot_bar_chart(acc_labels, acc_means, y_stdev=acc_stds, labels=['Depth ' + str(i
 
 
 # Vary num prototypes
-num_prototypes = [10, 15, 20, 25] #, 50, 100]
+num_prototypes = [10, 15, 20, 25]
 cutoff_means = []
 cutoff_stds = []
 batch_idxs = []
@@ -98,5 +97,3 @@ for num_protos in num_prototypes:
     batch_idxs.append([i for i in range(len(cutoffs[0]))][8000:])
 plot_multiple_runs(batch_idxs, cutoff_means, y_stdev=cutoff_stds, labels=['Num protos ' + str(num_prototypes[i]) for i in range(len(cutoff_means))], x_axis="Batch idx", y_axis="Cutoff")
 
-# Show histograms of the different models at end of training by depth.
-# TODO: would require actually loading the models, I think, which means I'll do that in a different script.

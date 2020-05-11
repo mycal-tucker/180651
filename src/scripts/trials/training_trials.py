@@ -12,7 +12,7 @@ NUM_TUNING_EPOCHS = 5
 NUM_DUPLICATES = 10
 
 depths = [1, 2, 3, 4]
-num_prototypes = [10, 15, 20, 25, 50, 100]
+num_prototypes = [10, 15, 20, 25]
 
 for inv in [True, False]:
     inv_str = 'inverted' if inv else 'not_inverted'
@@ -33,6 +33,7 @@ for inv in [True, False]:
                         os.makedirs(path)
                     # Now do the actual training, and then save the model and figures
                     auto = ProtoModel(num_protos, LATENT_DIM, depth)
+                    # Do you want digit or fashion?
                     # x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_digit_data()
                     x_train, _, y_train_one_hot, x_test, y_test, y_test_one_hot, class_labels = get_fashion_data()
                     cutoffs = auto.train_with_metrics([x_train, y_train_one_hot], epochs=NUM_TRAINING_EPOCHS, batch_size=128)

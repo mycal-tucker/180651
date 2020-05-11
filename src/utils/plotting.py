@@ -48,6 +48,7 @@ def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis, window_s
         for j in range(len(x_data[i]) - window_size):
             val = np.mean(y_data[i][j: j + window_size])
             y_data[i][j] = val
+        # There's a tiny bit of trickiness here to include the last element in the window.
         plot_y.append(y_data[i][:-window_size])
         plot_y[-1].append(y_data[i][-window_size])
         plot_y_err.append(y_stdev[i][:-window_size])
@@ -57,7 +58,7 @@ def plot_multiple_runs(x_data, y_data, y_stdev, labels, x_axis, y_axis, window_s
     fig, ax = plt.subplots()
     for run_idx in range(len(x_data)):
         markers, caps, bars = ax.errorbar(plot_x[run_idx], plot_y[run_idx], yerr=plot_y_err[run_idx], label=labels[run_idx])
-        [bar.set_alpha(0.4) for bar in bars]
+        [bar.set_alpha(0.4) for bar in bars]  # Tune this alpha param depending on how opaque you want the error bars.
     plt.legend([str(label) for label in labels])
     plt.xlabel(x_axis)
     plt.ylabel(y_axis)
